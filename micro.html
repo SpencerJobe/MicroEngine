@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Micro Engine</title>
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin:0;
+      padding:0;
+    }
+    #screen {
+      position: absolute;
+      image-rendering: pixelated;
+    }
+    body {
+      background:rgb(64,65,66);
+    }
+
+    /*JOYPAD*/
+      #joypad {
+        position:absolute;
+        /*border:1px solid red;*/
+        max-width:128px;
+        max-height:128px;
+        top:55%;
+        left:5%;
+
+      }
+      #joypad * {
+        background:rgb(40,41,42);
+        border:1px solid rgb(40,41,42);
+      }
+      #joypad-up {
+        position:absolute;
+        top:0%;
+        left:40%;
+        height:40%;
+        width:20%;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+      #joypad-down {
+        position:absolute;
+        top:60%;
+        left:40%;
+        height:40%;
+        width:20%;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+      #joypad-left {
+        position:absolute;
+        top:40%;
+        left:0%;
+        height:20%;
+        width:40%;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+      }
+      #joypad-right {
+        position:absolute;
+        top:40%;
+        left:60%;
+        height:20%;
+        width:40%;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+    /*END*/
+    
+    /*BUTTON-C*/
+
+      #button-c {
+        position:absolute;
+        width:55%;
+        height:55%;
+        max-width: 80px;
+        max-height: 80px;
+        border-radius: 50%;
+        border:1px solid rgb(40,41,42);
+        background:rgb(40,41,42);
+        color:white;
+        text-align: center;
+        line-height: 43px;
+      }
+      #button-c-marker {
+        position:absolute;
+        top:25%;
+        bottom:25%;
+        left:25%;
+        width:40%;
+        background:transparent;
+        font-size:0px;
+        border-radius: 3px;
+        border:6px solid rgb(30,31,32);
+        border-right:none;
+        border-top-left-radius: 50%;
+        border-bottom-left-radius: 50%;
+      }
+    /*END*/
+
+    /*BUTTON-X*/
+      #button-x {
+        position:absolute;
+        width:55%;
+        height:55%;
+        max-width: 80px;
+        max-height: 80px;
+        border-radius: 50%;
+        border:1px solid rgb(40,41,42);
+        background:rgb(40,41,42);
+        color:white;
+        text-align: center;
+        line-height: 43px;
+      }
+      #button-x-line-1 {
+        position:absolute;
+        top:20%;
+        left:45%;
+        width:6px;
+        height:60%;
+        background:rgb(30,31,32);
+        border:1px solid rgb(30,31,32);
+        border-radius: 3px;
+        font-size:0px;
+        -webkit-transform: rotate(-45deg); 
+        transform: rotate(-45deg);
+      }
+
+      #button-x-line-2 {
+        position:absolute;
+        top:20%;
+        left:45%;
+        width:6px;
+        height:60%;
+        background:rgb(30,31,32);
+        border:1px solid rgb(30,31,32);
+        border-radius: 3px;
+        font-size:0px;
+        -webkit-transform: rotate(45deg); 
+        transform: rotate(45deg);
+      }
+    /*END*/
+
+    /*BUTTON-F*/
+      #button-f {
+        position:absolute;
+        min-height: 16px;
+        min-width: 32px;
+        max-height: 25px;
+        max-width: 80px;
+        background:rgb(120,121,122);
+        border:1px solid rgb(120,121,122);
+        border-radius: 4px;
+      }
+      #button-f-marker {
+        position:absolute;
+        top:4%;
+        left:40%;
+        bottom:4%;
+        width:20%;
+        background:transparent;
+        border: 4px solid rgb(100,101,102);
+        border-radius: 0px;
+        border-right: none;
+        border-bottom:none;
+        font-size: 0px;
+      }
+      #button-f-crossbar {
+        position:absolute;
+        top:35%;
+        left:40%;
+        height:4px;
+        width:17%;
+        font-size: 0px;
+        background:rgb(100,101,102);
+        border:1px solid rgb(100,101,102);
+        border-radius: 0px;
+      }
+    /*END*/
+
+  </style>
+  <script>
+    (function loadMicroEngine(win){
+      
+      //INTERNALS
+        var gIncludeList = {};
+        var gContext;
+        var gWindowInfo = { "width": 0, "height": 0, "layout": "horizontal", "mode": "mobile"};
+        
+        var gButtons = {
+          "down": [0,0,0,0,0,0,0],
+          "up": [0,0,0,0,0,0,0],
+          "hit" : [0,0,0,0,0,0,0]
+        };
+
+        var gButtonMap = {
+          "38" : 0, //up
+          "39" : 1, //right
+          "40" : 2, //down
+          "37" : 3, //left
+          "67" : 4,  // "C" key / button C
+          "88" : 5,  // "X" key / button X
+          "70" : 6 // "F" key for button F
+        };
+
+        var gSoundWaveMap = {
+          0: "sine",
+          1: "saw",
+          2: "square",
+          3: "triangle"
+        };
+
+        var gFontMap = {
+          "dither": "101010010101101010010101101010010101",
+          "0": "011100110010101010100110011100000000",
+          "1": "001000011000001000001000011100000000",
+          "2": "011100000010001110010000011110000000",
+          "3": "011110000010001100000010011100000000",
+          "4": "010010010010011110000010000010000000",
+          "5": "011110010000011100000010011100000000",
+          "6": "001110010000011110010010011110000000",
+          "7": "011110000010000100001000001000000000",
+          "8": "011110010010001100010010011110000000",
+          "9": "001110010010011110000010011100000000",
+          "a": "011100100010111110100010100010000000",
+          "b": "111100100010111100100010111110000000",
+          "c": "111110100000100000100000111110000000",
+          "d": "111100100010100010100010111100000000",
+          "e": "111110100000111100100000111110000000",
+          "f": "111110100000111100100000100000000000",
+          "g": "011110100000101110100010011100000000",
+          "h": "100010100010111110100010100010000000",
+          "i": "111110001000001000001000111110000000",
+          "j": "001110000100000100100100011000000000",
+          "k": "100010100100111000100100100010000000",
+          "l": "100000100000100000100000111110000000",
+          "m": "110110101010101010101010100010000000",
+          "n": "110010101010101010100110100010000000",
+          "o": "011100100010100010100010011100000000",
+          "p": "111100100010111110100000100000000000",
+          "q": "011100100010100010100100011010000000",
+          "r": "111100100010111100100010100010000000",
+          "s": "011110100000011100000010111100000000",
+          "t": "111110001000001000001000001000000000",
+          "u": "100010100010100010100010111110000000",
+          "v": "100010100010010100001000001000000000",
+          "w": "100010101010101010110110010100000000",
+          "x": "100010010100001000010100100010000000",
+          "y": "100010100010111110000010111110000000",
+          "z": "111110000100001000010000111110000000",
+          " ": "000000000000000000000000000000000000",
+          "?": "111000001000011000000000010000000000",
+          ".": "000000000000000000000000010000000000",
+          "!": "010000010000010000000000010000000000",
+          ",": "000000000000000000000000010000100000",
+          "'": "010000010000000000000000000000000000",
+          "@": "011100100010101110101010010110000000",
+          "#": "010100111110010100111110010100000000",
+          "$": "011110101000111110001010111110001000",
+          "%": "110010100100001000010010100110000000",
+          "^": "001000010100100010000000000000000000",
+          "&": "011000101000110010101100111000000000",
+          "*": "000000010100001000010100000000000000",
+          "(": "000100001000001000001000001000000100",
+          ")": "001000000100000100000100000100001000",
+          "-": "000000000000011110000000000000000000",
+          "=": "000000011110000000011110000000000000",
+          "_": "000000000000000000000000000000111111",
+          "+": "000000001000011100001000000000000000",
+          "[": "001100001000001000001000001000001100",
+          "]": "001100000100000100000100000100001100",
+          "{": "001100001000001000010000001000001100",
+          "}": "001100000100000100000010000100001100",
+          "/": "000000000010000100001000010000000000",
+          "\\": "000000010000001000000100000010000000",
+          "|": "001000001000001000001000001000001000",
+          ":": "000000010000000000010000000000000000",
+          ";": "000000010000000000010000100000000000",
+          "\"": "010100010100000000000000000000000000",
+          "<": "000000000110011000000110000000000000",
+          ">": "000000011000000110011000000000000000",
+          "~": "000000011010010110000000000000000000",
+          "`": "010000001000000000000000000000000000"
+        };
+
+        var gColorMap = {
+          0: "rgb(0,0,0)",
+          1: "rgb(200,0,75)",
+          2: "rgb(255,200,0)",
+          3: "rgb(160,80,20)",
+          4: "rgb(100,200,0)",
+          5: "rgb(0,150,255)",
+          6: "rgb(80,40,55)",
+          7: "rgb(250,250,250)"
+        };
+
+        var gControlsCss = {
+          "horizontal" : {
+            "screen" : {
+              "top": "2%",
+              "left": "20%",
+              "height" : "96%",
+              "width" : "60%"
+            },
+            "joypad" : {
+              "display": "inline-block",
+              "top"  : "36%",
+              "height": "25%",
+              "width": "16%",
+              "left" : "2%"
+            },
+            "button-c" : {
+              "display": "inline-block",
+              "top" : "10%",
+              "right": "5%",
+              "width": "11%",
+              "height": "17%"
+            },
+            "button-x" : {
+              "display": "inline-block",
+              "top" : "35%",
+              "right": "5%",
+              "width": "11%",
+              "height": "17%"
+            },
+            "button-f" : {
+              "display": "inline-block",
+              "bottom" : "5%",
+              "right" : "5%",
+              "width" : "11%",
+              "height": "17%"
+            }
+          }, 
+          "vertical" : {
+            "screen" : {
+              "top": "2%",
+              "left": "2%",
+              "height" : "48%",
+              "width" : "96%"
+            },
+            "joypad" : {
+              "display": "inline-block",
+              "top"  : "55%",
+              "left" : "2%",
+              "height": "25%",
+              "width": "40%"
+            },
+            "button-c" : {
+              "display": "inline-block",
+              "top" : "55%",
+              "right": "5%",
+              "width": "20%",
+              "height": "12%"
+            },
+            "button-x" : {
+              "display": "inline-block",
+              "top" : "68%",
+              "right": "25%",
+              "width": "20%",
+              "height": "12%"
+            },
+            "button-f" : {
+              "display": "inline-block",
+              "bottom" : "5%",
+              "right" : "40%",
+              "width" : "20%",
+              "height": "12%"
+            }
+          }        
+        };
+
+        function applyJsCss(cssObject) {
+          
+          var el;
+          var props;
+
+          for(var name in cssObject) {
+            
+            el = document.getElementById(name);
+            props = cssObject[name];
+            
+            for(var prop in props) {
+
+              el.style[prop] = props[prop];
+            }
+          }
+        }
+        function areIncludesResolved() {
+          var result = true;
+          for (var path in gIncludeList) {
+            if (!gIncludeList[path]) {
+              result = false;
+              break;
+            }
+          }
+          return result;
+        }
+        function addScript(path) {
+          var script = document.createElement("script");
+          script.src = path;
+          script.async = false;
+          script.onload = function () {
+            gIncludeList[path] = true;
+          };
+          document.head.appendChild(script);
+        }
+        function engineUpdate() {
+          if (window.update !== undefined) {
+            window.update();
+            resetButtonFlags();
+            
+          }
+          requestAnimationFrame(engineUpdate);
+        }
+        function resetButtonFlags() {
+          gButtons.up = [0,0,0,0,0];
+          for (var i = 0; i < 5; i += 1) {
+            gButtons.hit[i] = gButtons.hit[i] === 1 ? 2 : gButtons.hit[i];
+          }
+        }
+        function handleKeyDownEvent(e) {
+          var btn = gButtonMap[e.keyCode];
+          gButtons.down[btn] = 1;
+          gButtons.up[btn] = 0;
+          gButtons.hit[btn] = gButtons.hit[btn] === 0 ? 1 : gButtons.hit[btn];
+        }
+        function handleKeyUpEvent(e) {
+          var btn = gButtonMap[e.keyCode];
+          gButtons.down[btn] = 0;
+          gButtons.up[btn] = 1;
+          gButtons.hit[btn] = 0;
+          console.log(e.keyCode);
+        }
+        function cancelEvent(ev) {
+          try {
+            if (ev.stopPropagation) {
+              ev.stopPropagation();
+            }
+            if (ev.preventDefault) {
+              ev.preventDefault();
+            }
+            ev.cancelBubble = true;
+          } catch (er) {
+            console.log("cancelEvent -> " + er.message);
+          }
+          return false;
+        }
+        function createDPadTouchGridPosition(e) {
+          var x = e.targetTouches[0].pageX;
+          var y = e.targetTouches[0].pageY;
+          var dpadRect = document.getElementById("joypad").getBoundingClientRect();
+          var gridW = dpadRect.width/5;
+          var gridH = dpadRect.height/5;
+          return {
+            "x": Math.floor((x-dpadRect.x) / gridW),
+            "y": Math.floor((y-dpadRect.y) / gridH)
+          };
+        }
+        function handleButtonCTouchStartEvent(e) {
+          return resolveButtonTouchStartEvent(4,e);
+        }
+        function handleButtonCTouchEndEvent(e) {
+          return resolveButtonTouchEndEvent(4,e);
+        }
+        function handleButtonXTouchStartEvent(e) {
+          return resolveButtonTouchStartEvent(5,e);
+        }
+        function handleButtonXTouchEndEvent(e) {
+          return resolveButtonTouchEndEvent(5,e);
+        }
+        function handleButtonFTouchStartEvent(e) {
+          return resolveButtonTouchStartEvent(6,e);
+        }
+        function handleButtonFTouchEndEvent(e) {
+          return resolveButtonTouchEndEvent(6,e);
+        }
+        function resolveButtonTouchStartEvent(buttonIndex, e) {
+          gButtons.down[buttonIndex] = 1;
+          gButtons.up[buttonIndex] = 0;
+          gButtons.hit[buttonIndex] = gButtons.hit[buttonIndex] === 0 ?
+            1 : gButtons.hit[buttonIndex];
+          return cancelEvent(e);
+        }
+        function resolveButtonTouchEndEvent(buttonIndex, e) {
+          gButtons.down[buttonIndex] = 0;
+          gButtons.up[buttonIndex] = 1;
+          gButtons.hit[buttonIndex] = 0;
+          return cancelEvent(e);
+        }
+        function handleDPadTouchStartEvent(e) {
+
+          handleDPadTouchMoveEvent(e); //updates all the gButtons.down values.
+
+          for (var b = 0; b <= 3; b += 1) {
+
+            if (gButtons.down[b] === 1) {
+          
+              gButtons.hit[b] = gButtons.hit[b] === 1 ? 2 : 1;
+            }
+          }
+
+          return cancelEvent(e);
+        }
+        function handleDPadTouchMoveEvent(e) {
+
+          var grid = createDPadTouchGridPosition(e);
+
+          gButtons.down[0] = (grid.y < 2 && grid.y >= 0) ? 1 : 0; //up
+          gButtons.down[1] = (grid.x > 2 && grid.x < 5) ? 1 : 0; //right
+          gButtons.down[2] = (grid.y > 2 && grid.y < 5) ? 1 : 0; //down
+          gButtons.down[3] = (grid.x < 2 && grid.x >= 0) ? 1 : 0; //left
+
+        }
+        function handleDPadTouchEndEvent(e) {
+
+          for (var b = 0; b <= 3; b += 1) {
+          
+            gButtons.up[b] = gButtons.down[b];
+            gButtons.down[b] = 0;
+            gButtons.hit[b] = 0;
+          }
+
+          return cancelEvent(e);
+        }
+        function updateLayout() {
+
+          var css = gControlsCss[gWindowInfo.layout];
+          applyJsCss(css);
+        }
+        function checkWindowResize () {
+          if (window.innerHeight !== gWindowInfo.height ||
+            window.innerWidth !== gWindowInfo.width) {
+              gWindowInfo = {
+                "width" : window.innerWidth,
+                "height": window.innerHeight,
+                "layout" : (window.innerWidth > window.innerHeight) ?
+                  "horizontal" : "vertical",
+              };
+              updateLayout();
+            }
+        }
+        function engineInitialize() {
+          
+          var joypad = document.getElementById("joypad");
+          var buttonC = document.getElementById("button-c");
+          var buttonX = document.getElementById("button-x");
+          var buttonF = document.getElementById("button-f");
+
+          gContext = document.getElementById("screen").getContext("2d");
+          rect(0,0,160,120,0);
+
+          window.document.body.addEventListener("keydown",handleKeyDownEvent);
+          window.document.body.addEventListener("keyup",handleKeyUpEvent);
+          
+          //JOYPAD
+          joypad.addEventListener("touchstart",handleDPadTouchStartEvent);
+          joypad.addEventListener("touchmove",handleDPadTouchMoveEvent);
+          joypad.addEventListener("touchend",handleDPadTouchEndEvent);
+          //BUTTON-C
+          buttonC.addEventListener("touchstart",handleButtonCTouchStartEvent);
+          buttonC.addEventListener("touchend",handleButtonCTouchEndEvent);
+          //BUTTON-X
+          buttonX.addEventListener("touchstart",handleButtonXTouchStartEvent);
+          buttonX.addEventListener("touchend",handleButtonXTouchEndEvent);
+          //button-f
+          buttonF.addEventListener("touchstart",handleButtonFTouchStartEvent);
+          buttonF.addEventListener("touchend",handleButtonFTouchEndEvent);
+          setInterval(checkWindowResize,30);
+          updateLayout();
+          requestAnimationFrame(engineUpdate);
+        }
+        function renderChar(sx,sy,color,char) {
+          var pixels = gFontMap[char.toLowerCase()] || gFontMap["?"];
+          var x = 0;
+          var y = 0;
+          gContext.fillStyle = gColorMap[color];
+          for (var i = 0; i < 36; i += 1) {
+            if (pixels[i] == "1") {
+              gContext.fillRect(sx+x,sy+y,1,1);
+            }
+            x += 1;
+            if (x > 5) {
+              x = 0;
+              y += 1;
+            }
+          }
+        }
+        function startup () {
+          if (areIncludesResolved()) {
+            setTimeout(function() {
+              if (typeof window.ready === "function") {
+                window.ready(); //from game.js
+              }
+              engineInitialize();
+            },30);
+          } else {
+            setTimeout(startup,30);
+          }
+        } 
+        setTimeout(startup,30);
+      //END
+
+      //ENGINE FUNCTIONS
+        win.plot = function plot(x,y,color) {
+          
+          rect(x,y,1,1,color);
+        };
+        win.rect = function rect(x,y,w,h,color) {
+          gContext.fillStyle = gColorMap[color];
+          gContext.fillRect(x,y,w,h);
+        };
+        win.draw = function draw(x,y,array,optMaskColor) {
+          var row;
+          for (var r = 0; r < array.length; r += 1) {
+            row = array[r];
+            for (var c = 0; c < row.length; c += 1) {
+              row[c] !== optMaskColor ? plot(x+c,y+r,row[c]) : 0;
+            }
+          }
+        };
+        win.text = function text(x,y,color,msg) {
+          msg = String(msg);
+          for (var i = 0; i < msg.length; i += 1) {
+            renderChar(x+(i*6),y,color,msg[i]);
+          }
+        }
+        win.play = function play(seconds,hertz,waveIndex) {
+          //0 - sine 1 - saw  2 - square 3 - triangle
+          var audioContext = new AudioContext();
+          var oscillator = audioContext.createOscillator();
+          var gainNode = audioContext.createGain();
+          oscillator.type = gSoundWaveMap[waveIndex];
+          oscillator.frequency.value = hertz;
+          gainNode.connect(audioContext.destination);
+          oscillator.connect(gainNode);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + seconds);
+          oscillator.onended = function () {
+            oscillator.disconnect();
+            gainNode.disconnect();
+          };
+        };
+        win.held = function held(buttonIndex) {
+          return gButtons.down[buttonIndex];
+        };
+        win.pressed = function pressed(buttonIndex) {
+          return gButtons.hit[buttonIndex] === 1;
+        };
+        win.released = function released(buttonIndex) {
+          return gButtons.up[buttonIndex];
+        };
+        win.clear = function clear() {
+          gButtons.down = [0,0,0,0,0,0,0];
+          gButtons.up = [0,0,0,0,0,0,0];
+          gButtons.hit = [0,0,0,0,0,0,0]
+        };
+        win.inside = function inside(px,py,rx,ry,rw,rh) {
+          return (px > rx) && (px < (rx + rw)) && (py > ry) && (py < (ry+rh));
+        };
+        win.dist = function dist(x1,y1, x2, y2) {
+          var dx = x2-x1;
+          var dy = y2-y1;
+          var ratio = (dy*dy) + (dx*dx);
+          return Math.sqrt(ratio);
+        };
+        win.overlap = function overlap(x1,y1,w1,h1,x2,y2,w2,h2) {
+
+          if (inside(x1,y1,x2,y2,w2,h2)) {
+            return true;
+          } else if (inside(x1+w1,y1,x2,y2,w2,h2)) {
+            return true;
+          } else if (inside(x1,y1+h1,x2,y2,w2,h2)) {
+            return true;
+          } else if (inside(x1+w1,y1+h1,x2,y2,w2,h2)) {
+            return true;
+          } if (inside(x2,y2,x1,y1,w1,h1)) {
+            return true;
+          } else if (inside(x2+w2,y2,x1,y1,w1,h1)) {
+            return true;
+          } else if (inside(x2,y2+h2,x1,y1,w1,h1)) {
+            return true;
+          } else if (inside(x2+w2,y2+h2,x1,y1,w1,h1)) {
+            return true;
+          }
+          return false;
+        };
+        win.rand = function rand(count) {
+
+            var value = Math.floor(Math.random()*count);
+
+            return value;
+        };
+        win.include = function include(path) {
+          if (gIncludeList[path] === undefined) {
+            gIncludeList[path] = false;
+            addScript(path);
+          }
+        };
+      //END
+
+      }(window));
+  </script>
+</head>
+<body>
+ 
+  <canvas id="screen" width=160 height=120></canvas>
+     
+  <div id="joypad">
+    <div id="joypad-up"></div>
+    <div id="joypad-down"></div>
+    <div id="joypad-left"></div>
+    <div id="joypad-right"></div>
+  </div>
+
+  <div id="button-c">
+    <div id="button-c-marker"></div>
+  </div>
+
+  <div id="button-x">
+    <div id="button-x-line-1"></div>
+    <div id="button-x-line-2"></div>
+  </div>
+
+  <div id="button-f">
+    <div id="button-f-marker"></div>
+    <div id="button-f-crossbar"></div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
