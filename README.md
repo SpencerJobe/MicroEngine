@@ -1083,7 +1083,7 @@ function update() {
 
     // MONSTER --------------------------------------
 
-        // move the ball diagonally up-left
+        // move the monster diagonally up-left
         monster.x = (monster.x < 0) ? 100 : monster.x-0.1;
         monster.y = (monster.y < 0) ? 100 : monster.y-0.1;
 
