@@ -16,34 +16,39 @@
 
 
 /** Called by MicroEngine about 60 times a second.
- *  This function must be present in the game.js file
+ *  This function must be present in the game.js file  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#update) 
  */
 declare function update() :void;
 
 
 /** Loads a JavaScript file at the provided path.  
  * Once all files have been included, the `ready()` function 
- * will be called.
+ * will be called.  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#include-path-)
  *  @param {string} path path of script file to be included.
  */
 declare function include(path:string): void;
 
 
 /** This function is called after all included scripts have
- *  loaded but before the first call to `update()`
+ *  loaded but before the first call to `update()`  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#ready)
  */
 declare function ready(): void;
 
 
-/** Plots a pixel of a given color to the screen
+/** Plots a pixel of a given color to the screen  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#plot-x-y-color-)
  * @param {number} x x-coordinate of the pixel
  * @param {number} y y-cordinate of the pixel
- * @param {number} color Color index that defines the color of the pixel
+ * @param {number} color Color index that defines the color of the pixel  
  */
 declare function plot (x:number, y:number, color:number) : void;
 
 
-/** Draws a rectangle of a given color to the screen
+/** Draws a rectangle of a given color to the screen  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#rect-x-y-w-h-color-)
  * @param {number} x x-coordinate of the upper-left corner of the rectangle
  * @param {number} y y-coordinate of the upper-left corner of the rectangle
  * @param {number} w width in pixels of the rectangle
@@ -53,16 +58,19 @@ declare function plot (x:number, y:number, color:number) : void;
 declare function rect(x:number, y:number, w:number, h:number, color:number): void;
 
 
-/** Draws a sprite to the provided x,y coordinate.
+/** Draws a sprite to the provided x,y coordinate.  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#draw-x-y-spriteArray-)
  * @param {number} x x-coordinate of the upper-left corner of the sprite
  * @param {number} y y-coordinate of the upper-left corner of the sprite
  * @param {Array} spriteArray 2D array of numbers representing color indexes of each pixel of the sprite
+
  */
 declare function draw(x:number, y:number,spriteArray:Array):void
 
 
-/** Draws a sprite to the provided x,y coordinate
- * @param {number} x x-coordinate of the upper-left corner of the sprite
+/** Draws a sprite to the provided x,y coordinate  
+* [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#draw-x-y-spriteArray-)  
+* @param {number} x x-coordinate of the upper-left corner of the sprite
  * @param {number} y y-coordinate of the upper-left corner of the sprite
  * @param {Array} spriteArray 2D array of numbers representing color indexes of each pixel of the sprite
  * @param {number} optMaskColor (Optional) color index that defines a color index to be treated as transparent  
@@ -91,9 +99,9 @@ declare function play(length:number,hertz:number,wave:number) : void;
  * ```  
  * -Button Indexes-
  *     0  up       4  C button  
- *     1  left     5  X button  
+ *     1  right    5  X button  
  *     2  down     6  F button  
- *     3  right  
+ *     3  left  
  * ```
  * @param {number} buttonIndex index of the button to be checked
  */
@@ -104,9 +112,9 @@ declare function held(buttonIndex:number): boolean;
  * ```  
  * -Button Indexes-
  *     0  up       4  C button  
- *     1  left     5  X button  
+ *     1  right    5  X button  
  *     2  down     6  F button  
- *     3  right  
+ *     3  left  
  * ```
  * @param {number} buttonIndex index of the button to be checked
  */
@@ -117,9 +125,9 @@ declare function pressed(buttonIndex:number): boolean;
  * ```  
  * -Button Indexes-
  *     0  up       4  C button  
- *     1  left     5  X button  
+ *     1  right    5  X button  
  *     2  down     6  F button  
- *     3  right  
+ *     3  left  
  * ```
  * @param {number} buttonIndex index of the button to be checked
  */
