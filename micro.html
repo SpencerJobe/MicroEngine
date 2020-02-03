@@ -190,7 +190,11 @@
       
       //INTERNALS
         var gIncludeList = {};
+        var gAudioPlaying = false;
+        var gAudioContext;
         var gContext;
+        
+
         var gWindowInfo = { "width": 0, "height": 0, "layout": "horizontal", "mode": "mobile"};
         
         var gButtons = {
@@ -481,6 +485,8 @@
           return resolveButtonTouchEndEvent(6,e);
         }
         function resolveButtonTouchStartEvent(buttonIndex, e) {
+          
+          setTimeout(initializeAudio,20);
           gButtons.down[buttonIndex] = 1;
           gButtons.up[buttonIndex] = 0;
           gButtons.hit[buttonIndex] = gButtons.hit[buttonIndex] === 0 ?
@@ -494,7 +500,8 @@
           return cancelEvent(e);
         }
         function handleDPadTouchStartEvent(e) {
-
+          
+          setTimeout(initializeAudio,20);
           handleDPadTouchMoveEvent(e); //updates all the gButtons.down values.
 
           for (var b = 0; b <= 3; b += 1) {
@@ -545,6 +552,9 @@
               updateLayout();
             }
         }
+        function initializeAudio() {
+            gAudioContext = (gAudioContext) ? gAudioContext : new AudioContext();
+        }
         function engineInitialize() {
           
           var joypad = document.getElementById("joypad");
@@ -553,6 +563,7 @@
           var buttonF = document.getElementById("button-f");
 
           gContext = document.getElementById("screen").getContext("2d");
+         
           rect(0,0,160,120,0);
 
           window.document.body.addEventListener("keydown",handleKeyDownEvent);
@@ -631,20 +642,28 @@
           }
         }
         win.play = function play(seconds,hertz,waveIndex) {
-          //0 - sine 1 - saw  2 - square 3 - triangle
-          var audioContext = new AudioContext();
-          var oscillator = audioContext.createOscillator();
-          var gainNode = audioContext.createGain();
-          oscillator.type = gSoundWaveMap[waveIndex];
-          oscillator.frequency.value = hertz;
-          gainNode.connect(audioContext.destination);
-          oscillator.connect(gainNode);
-          oscillator.start();
-          oscillator.stop(audioContext.currentTime + seconds);
-          oscillator.onended = function () {
-            oscillator.disconnect();
-            gainNode.disconnect();
-          };
+
+          if (!gAudioPlaying) {
+
+            initializeAudio();
+            gAudioPlaying = true;
+            //0 - sine 1 - saw  2 - square 3 - triangle
+            var oscillator = gAudioContext.createOscillator();
+            var gainNode = gAudioContext.createGain();
+            oscillator.type = gSoundWaveMap[waveIndex];
+            oscillator.frequency.value = hertz;
+            gainNode.connect(gAudioContext.destination);
+            oscillator.connect(gainNode);
+            oscillator.start();
+            oscillator.stop(gAudioContext.currentTime + seconds);
+            oscillator.onended = function () {
+              oscillator.disconnect();
+              gainNode.disconnect();
+              setTimeout(function(){ 
+                gAudioPlaying = false;
+              },10);
+            };
+          }
         };
         win.held = function held(buttonIndex) {
           return gButtons.down[buttonIndex];
@@ -731,7 +750,9 @@
     <div id="button-f-marker"></div>
     <div id="button-f-crossbar"></div>
   </div>
-
+  <div style="position:absolute; right:28px; bottom:28px;">
+   6
+  </div>
   <script src="game.js"></script>
 </body>
 </html>

@@ -722,7 +722,7 @@ function update() {
 
 **_Information_**
 
-The `releases` function will return `true` if the button corresponding
+The `released` function will return `true` if the button corresponding
 to the provided `<buttonIndex>` was released. ([See buttons](#buttons))
 Otherwise it will return `false`. This event will only return `true`
 once per button release. So, if the button is released, this function
