@@ -8,6 +8,7 @@ games on the web that work on desktop and mobile devices.
 - [About](#About)
 - [Commands](#Commands)  
 - [Appendix](#Appendix)
+- [Demos](https://spencerjobe.github.io/MicroEngine/)
 
 &nbsp; &nbsp; &nbsp; ![](readme_resources/micro_engine_horizontal_mini.png)
 
