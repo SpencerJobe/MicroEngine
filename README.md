@@ -77,7 +77,7 @@ of `game.js` to enable the MicroEngine intellisense.
 ```javascript
 /// <reference path="micro_engine.d.ts" />
 ```  
-_notice this comment begins with a tripple slash "`///`"._  
+_notice this comment begins with a triple slash "`///`"._  
 
 &nbsp; 
 
@@ -99,22 +99,26 @@ games on the web. MicroEngine can run on the desktop with keyboard
 controls or on mobile devices. See the [buttons](#buttons) section
 in the appendix for more information.
 
-The MicroEngine supports 8 colors. These colors are referenced by 
+MicroEngine supports 8 colors. These colors are referenced by 
 an index 0 thru 7. See the [colors](#colors) section in the appendix
 for details.
 
-The MicroEngine supports basic drawing commands and one sprite
+MicroEngine supports a constant resolution of 160 by 120 pixels. 
+The display will scale based on the platform. Check out the [Screen](#screen)
+section in the appendix for more details. There is one font 
+supported, see the [Font](#Font) section in the appendix for more details.
+
+MicroEngine supports basic drawing commands and one sprite
 drawing command. Sprites are stored as 2D JavaScript arrays of 
 single-digit numbers 0-7. Graphics commands are listed under
 _Graphics_ in the [Commands](#commands) section.
 
-The MicroEngine supports retro sound effects with the [play](#play-length-hertz-wave-) 
-command. You can specify the duration, frequency, and basic sound wave type.
-The MicroEngine does not provide any music functionality. 
+MicroEngine supports retro sound effects with the [play](#play-channel-speed-voice-loop.notes-) 
+command. MicroEngine supports 4 audio channels with several different voices
+for sound effects and music. Audio commands are listed under _Audio_ in the [Commands](#commands) section.
+See the [Audio](#Audio) section of the Appendix for additional information.
 
-The MicroEngine supports a constant resolution of 160 by 120 pixels. 
-The display will scale based on the platform. Check out the [Screen](#screen)
-section in the appendix for more details.
+
 
 
 &nbsp;
@@ -148,11 +152,12 @@ is provided below.
   - [`ready()`](#ready)
 - Graphics
   - [`plot( <x>, <y>, <color> )`](#plot-x-y-color-)  
-  - [`rect( <x>, <y>, <w>, <h>, <color> )`](#rect-x-y-w-h-color-)  
+  - [`rect( <x>, <y>, <w>, <h>, <color>, [optColor2] )`](#rect-x-y-w-h-color-optColor2-)  
   - [`draw( <x>, <y>, <spriteArray>, [optMaskColor] )`](#draw-x-y-spriteArray-optMaskColor-)  
   - [`text( <x>, <y>, <color>, <message> )`](#text-x-y-color-message-)  
 - Audio
-  - [`play( <length>, <hertz>, <wave> )`](#play-length-hertz-wave-)
+  - [`play( <channel>, <speed>, <voice>, <loop>, <notes> )`](#play-channel-speed-voice-loop-notes-)
+  - [`stop( <channel> )`](#stop-channel-)
 - Controls
   - [`held( <buttonIndex> )`](#held-buttonIndex-)  
   - [`pressed( <buttonIndex> )`](#pressed-buttonIndex-)  
@@ -231,7 +236,7 @@ section in the appendix for more details.
 &nbsp;  
 **_Information_**
 
-The `include` function allows you to include additonal code from other script
+The `include` function allows you to include additional code from other script
 files. Use this command at the top of the `game.js` file. Once all code from
 every include has loaded, the MicroEngine will call the `ready` function. 
 
@@ -364,8 +369,7 @@ function update() {
 
 <!-- ******************************************************************************************** -->
 #
-### `rect( <x>, <y>, <w>, <h>, <color> )`
-
+### `rect( <x>, <y>, <w>, <h>, <color>, [optColor2] )`
 //[Home](#MicroEngine)/[Commands](#Commands)/rect
 
 | Parameter | Type | Description |
@@ -375,6 +379,7 @@ function update() {
 | `<w>` | number | width in pixels of the rectangle
 | `<h>` | number | height in pixels of the rectangle
 | `<color>` | number | color index representing the color<br>of the rectangle ([See Colors](#colors))
+| `[optColor2]` | number | (Optional) second color index representing the _other_ color of a dithered rectangle ([See Colors](#colors))
 
 &nbsp;
 
@@ -384,6 +389,8 @@ The `rect` function will draw a rectangle to the screen starting at the
 provided `<x>`,`<y>` position, that is  `<w>` pixels wide by `<h>` pixels high. The
 rectangle will be filled based on the provided `<color>` index. ([See colors](#colors)) This function is also used to clear the
 screen by starting a (x:0,y:0) and providing a width of 160 and a height of 120.
+
+You can draw a _dithered_ rectangle by providing a second color for the `[optColor2]` parameter.
 
 &nbsp;
 
@@ -399,6 +406,10 @@ function update() {
 
     //draws a green (index 4) rectangle to the screen
     rect(10,10,40,40,4); 
+
+    //draws a dithered rectangle to the screen,
+    //red (index 1) and blue (index 5)
+    rect(60,10,40,40,1,5);
 }
 ```
   
@@ -487,9 +498,11 @@ function update() {
 The `text` function will display the provided `<message>` starting at
 the provided `<x>`,`<y>` position using the provided `<color>` index. ([See colors](#colors))  
 
-The MicroEngine uses a 6x6 pixel monospaced font. Given that the 
+MicroEngine uses a 6x6 pixel monospaced font. Given that the 
 MicroEngine display is 160x120 pixels, this allows for 26x20 characters 
-on the display. Most of the characters found on a U.S. keyboard are supported. If a character cannot be displayed, then a '?' is used instead.
+on the display.  If a character cannot be displayed, then a '?' is used instead.
+MicroEngine ignores case. So, "a" and "A" are both displayed as a capital 'A'. 
+([See Font](#Font) for more details)
 
 &nbsp;
 
@@ -513,32 +526,45 @@ function update() {
 
 <!-- ******************************************************************************************** -->
 #
-### `play( <length>, <hertz>, <wave> )`
+### `play( <channel>, <speed>, <voice>, <loop>, <notes> )`
 //[Home](#MicroEngine)/[Commands](#Commands)/play
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `<length>` | number | Length in seconds that the sound will play. The value<br>can be a decimal less than 1, _Example: 0.0125_
-| `<hertz>`  | number | Frequency in hertz of the sound to be played
-| `<wave>`   | number | index of the sound wave type. 
-
+| `<channel>` | number | Channel on which the sound will play. <br> (Valid values are 0 thru 3)
+| `<speed>` | number | Number of notes played per second. 
+| `<voice>`   | number | index of the sound wave type to be used as the voice for the notes. 
+| `<loop>` | boolean | Set to true if you want the notes to be played on a loop
+| `<notes>` | Array&lt;string&gt; | An array of strings representing notes to play ([See Audio](#Audio))
 &nbsp;
 
 **_Information_**
 
-The `play` function will emit a specified sound `<wave>` at the provided
-`<hertz>` for a specified `<length>` in seconds. 
-The `<length>` can be less than 1 second if expressed as a decimal.
-The `<hertz>` value can also be expressed as a decimal. 
-Lastly, the `<wave>` value is a number 0 thru 3. This represents the different
-types of sound-waves that the MicroEngine can play. See table below.
+The `play` command handles all audio. MicroEngine can play 4 channels at the same time. This function will play the 
+provided `<notes>` at the given `<speed>` for in the specified `<voice>`. 
 
-|Index | Wave Type
+If `<loop>` is set to `true` then the notes will play in a loop like a 
+musical track.  You can stop a channel that is playing using the [`stop`](#stop-channel-) command.
+
+The `<speed>` parameter represents the number notes that are played per second. So, the higher this number,
+the faster the notes will be played. 
+
+The `<notes>` parameter is a array of strings where each string represents a valid note that MicroEngine 
+can play. MicroEngine can play the full range of notes between the 2nd and 7th octaves. There is partial
+support for the first octave. You can use the string "-" to represent a silent note. 
+([See Audio](#Audio) for more details)
+
+
+
+|Index | Voice Type
 | --- | --- |
 | `0` | Sine 
 | `1` | Saw 
 | `2` | Square 
 | `3` | Triangle 
+| `4` | Noise 
+
+
 
 &nbsp;
 
@@ -550,10 +576,11 @@ function update() {
 
     //if the action button is pressed
     // (the 'C' key on the keyboard)
-    if (pressed(0)) {
+    if (pressed(4)) {
 
-        // play a triangle wave at 135.1Hz for 1/10 of a second.
-        play(0.1,135.1,3);
+        // play a C in the third octave as a triangle wave 
+        // for 1/4 of a second on channel 0.
+        play(0,4,3,false,["C3"]);
     }
 }
 
@@ -562,7 +589,53 @@ function update() {
 &nbsp;  
 
 &nbsp;  
+<!-- ******************************************************************************************** -->
+#
+### `stop( <channel> )`
+//[Home](#MicroEngine)/[Commands](#Commands)/stop
 
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `<channel>` | number | Audio channel you want to stop <br> (Valid values are 0 thru 3)
+&nbsp;
+
+**_Information_**
+
+The `stop` command will stop an audio channel if that channel is currently playing. 
+To play sounds and music see the [`play`](#play-channel-speed-voice-loop-notes-) command.
+
+
+&nbsp;
+
+**_Example_**
+```javascript
+//game.js
+
+//Ready function is called by MicroEngine
+//after everything is loaded, but before the
+//engine starts calling the update() function
+function ready() {
+
+    //start music
+     play(0,2,3,true,["C3","D3","-","E3","F3","D3","-","-","-"]);
+}
+
+function update() {
+
+    //if the action button is pressed
+    // (the 'C' key on the keyboard)
+    if (pressed(4)) {
+
+        //stop music on channel 0
+        stop(0);
+    }
+}
+
+```
+  
+&nbsp;  
+
+&nbsp;  
 <!-- ******************************************************************************************** -->
 #
 ## `held( <buttonIndex> )`
@@ -726,7 +799,7 @@ The `released` function will return `true` if the button corresponding
 to the provided `<buttonIndex>` was released. ([See buttons](#buttons))
 Otherwise it will return `false`. This event will only return `true`
 once per button release. So, if the button is released, this function
-will **NOT** continously return `true`. Don't use this command if you
+will **NOT** continuously return `true`. Don't use this command if you
 are trying to program fluid movement, or stepwise movement. 
 Instead use [held](#held-buttonIndex-) or [pressed](#pressed-buttonIndex-) respectively. 
 
@@ -1011,8 +1084,8 @@ function update() {
 **_Information_**
 
 The `overlap` function tests if two rectangles are overlapping each other. 
-This function requires the x,y position, width, and height of the two rectangles
-you want to test. This first four arguments represent the x,y,width, and height of
+This function requires the x, y, width, and height of the two rectangles
+you want to test. This first four arguments represent the x, y, width, and height of
 the first rectangle and the second four arguments represent the second rectangle. 
 The x,y coordinates represent the upper-left corner of each rectangle. 
 ```javascript
@@ -1119,7 +1192,7 @@ function update() {
 The `rand` function returns a random integer up to, but not including `<range>`. So, the number generated
 includes the possibility of zero all the way up thru `<range>-1`. For example, `rand(6)` will
 randomly return a `0`, `1`, `2`, `3`, `4`, or `5`, but not a `6`.  This function can be helpful
-when generating psuedo-random events in your game. It can also be used to create flashing
+when generating pseudo-random events in your game. It can also be used to create flashing
 text on the screen. 
 
 
@@ -1176,7 +1249,8 @@ Here are some additional details about the MicroEngine's features and limitation
 - [Colors](#colors)
 - [Buttons](#buttons)
 - [Screen](#Screen)
-
+- [Font](#Font)
+- [Audio](#Audio)
 &nbsp;
 
 
@@ -1185,7 +1259,7 @@ Here are some additional details about the MicroEngine's features and limitation
 ## Colors
 //[Home](#MicroEngine)/[Appendix](#Appendix)/Colors
 
-The MicroEngine supports 8 colors. Each graphics function except the draw function requires a color index value. These values are are listed below.
+The MicroEngine supports 8 colors. Each graphics function except the draw function requires a color index value. These values are listed below.
 Names, RGB values, and Hex values are provided for convenience, but the
 MicroEngine functions require the `color` index value to be a number 0 thru 7.  
 
@@ -1243,8 +1317,8 @@ function update() {
 
 
 The MicroEngine controls consist of a directional pad and three 
-buttons X,C, and F. X and C are traditional "action" buttons, while
-the 'F' key looks like a start or menu button. 
+buttons X, C, and F. X and C are traditional "action" buttons, while
+the F key looks like a start or menu button. 
 On the desktop, MicroEngine is controlled with the arrow 
 keys that act as the directional pad, and the 'X', 'C', and 'F' letter-keys. On mobile devices MicroEngine listens for touch events 
 on the virtual directional-pad and virtual buttons rendered on the page. 
@@ -1291,11 +1365,98 @@ On mobile devices, virtual controls will appear on the left- and right-sides of 
 
 ![](readme_resources/layouts.png)
 
-All text is rendered in a 6x6 pixel mono-spaced font. The screen 
-can display 20 rows of text. Each row can hold up to 26 characters.
 
 Graphics commands that require an x,y position are based on an origin 
 in the upper left corner of the screen. 
 
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
 ![](readme_resources/micro_engine_screen.png)
+
+  
+&nbsp;  
+
+&nbsp;  
+
+
+<!-- ******************************************************************************************** -->
+#
+## Font
+//[Home](#MicroEngine)/[Appendix](#Appendix)/Font
+
+All text is rendered in a 6x6 pixel mono-spaced font. The screen 
+can display 20 rows of text. Each row can hold up to 26 characters.
+Each symbol is actually a 5x5 pixel square with a 1-pixel border on 
+the left and bottom. Below are the supported characters. 
+If a you try to display a character that's not in this list,
+MicroEngine will display a question mark instead.
+
+```
+    A B C D E F G H I J K L M
+    N O P Q R S T U V W X Y Z
+    0 1 2 3 4 5 6 7 8 9 ? . !
+    , + @ # $ % ^ & * ( ) - =
+    " ` ' _ [ ] { } / \ | < >
+    : ; ~
+```
+
+
+![](readme_resources/micro_engine_font.png)
+
+<!-- ******************************************************************************************** -->
+#
+## Audio
+//[Home](#MicroEngine)/[Appendix](#Appendix)/Audio
+
+MicroEngine supports four-channel audio. This means you can play four separate  sounds or music tracks
+at the same time. MicroEngine provides retro-style voices and a range of notes. Octaves 2 through 7
+are fully supported. A few notes from the first octave are also supported. You can set the playback 
+speed of notes and whether the notes are played on a loop like a musical track. There are only
+two audio commands: [`play`](#play-channel-speed-voice-loop-notes-) and [`stop`](#stop-channel-). However, 
+with these two commands, you can create a wide range of sound effects and music.
+
+&nbsp;
+
+### Channels
+MicroEngine supports four audio channels. They are referenced by index 0 through 3.
+```javascript
+    var channel = 0;
+    var speed = 2; // 2 notes per second
+    var voice = 3; // 3 triangle wave
+    var loop = false;  //don't loop this channel
+    var notes =["C2","D2","E2","F2","G2","A2","B2"];
+
+    play(channel,speed,voice,loop,notes);
+```
+
+### Voices
+MicroEngine supports 5 different voices. They are listed in the table below. 
+Different voices are good for different types of sounds. For example, 
+the noise voice can be used for explosion sounds. 
+
+| Index | Name | Pattern | Description
+| --- | --- | --- | --- 
+| 0   | Sine Wave | ![](readme_resources/micro_engine_sine_wave.png) | Smooth, clean tone
+| 1   | Sawtooth Wave | ![](readme_resources/micro_engine_sawtooth_wave.png) | Harsh, buzzing tone
+| 2   | Square Wave |  ![](readme_resources/micro_engine_square_wave.png) | Crisp, "computer-sounding" tone
+| 3   | Triangle Wave |  ![](readme_resources/micro_engine_triangle_wave.png) | Dampened, bass-like tone
+| 4   | Noise  |  ![](readme_resources/micro_engine_noise_wave.png) | white-noise, radio-static tone
+
+&nbsp;
+
+### Musical Notes
+Notes are provided to the `play` command as a series of strings in an 
+array.
+```javascript
+   var notes =["C2","D2","E2","F2","G2","A2","B2"];
+```
+The diagram below shows all the valid notes you can use with the `play` 
+command. This diagram is layed out like a piano. Color groupings denote
+the octave.
+![](readme_resources/micro_engine_valid_musical_notes.png)
+
+
+
+You can chain notes together to create different sound effects. 
+Explosions are best rendered with the `noise` voice.  Speed can 
+also affect how voices sound. Play around with different speeds
+and notes to get the desired effect. 

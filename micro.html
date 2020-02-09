@@ -190,11 +190,11 @@
       
       //INTERNALS
         var gIncludeList = {};
-        var gAudioPlaying = false;
-        var gAudioContext;
+        var gAudioContextsPlaying = [false,false,false,false];
+        var gAudioContexts = [null,null,null,null];
         var gContext;
+        var gGameStarted = false;
         
-
         var gWindowInfo = { "width": 0, "height": 0, "layout": "horizontal", "mode": "mobile"};
         
         var gButtons = {
@@ -213,15 +213,125 @@
           "70" : 6 // "F" key for button F
         };
 
-        var gSoundWaveMap = {
+        var gAudioVoices = {
           0: "sine",
-          1: "saw",
+          1: "sawtooth",
           2: "square",
-          3: "triangle"
+          3: "triangle",
+          4: "noise"
         };
 
+        var gMusicNotes = {
+            "-" : 0,
+            "A1" : 55,
+            "A#1" : 58.27,
+            "Bb1" : 58.27,
+            "B1" : 61.74,
+            "C2" : 65.41,
+            "C#2" : 69.3,
+            "Db2" : 69.3,
+            "D2" : 73.42,
+            "D#2" : 77.78,
+            "Eb2" : 77.78,
+            "E2" : 82.41,
+            "F2" : 87.31,
+            "F#2" : 92.5,
+            "Gb2" : 92.5,
+            "G2" : 98,
+            "G#2" : 103.83,
+            "Ab2" : 103.83,
+            "A2" : 110,
+            "A#2" : 116.54,
+            "Bb2" : 116.54,
+            "B2" : 123.47,
+            "C3" : 130.81,
+            "C#3" : 138.59,
+            "Db3" : 138.59,
+            "D3" : 146.83,
+            "D#3" : 155.56,
+            "Eb3" : 155.56,
+            "E3" : 164.81,
+            "F3" : 174.61,
+            "F#3" : 185,
+            "Gb3" : 185,
+            "G3" : 196,
+            "G#3" : 207.65,
+            "Ab3" : 207.65,
+            "A3" : 220,
+            "A#3" : 233.08,
+            "Bb3" : 233.08,
+            "B3" : 246.94,
+            "C4" : 261.63,
+            "C#4" : 277.18,
+            "Db4" : 277.18,
+            "D4" : 293.66,
+            "D#4" : 311.13,
+            "Eb4" : 311.13,
+            "E4" : 329.63,
+            "F4" : 349.23,
+            "F#4" : 369.99,
+            "Gb4" : 369.99,
+            "G4" : 392,
+            "G#4" : 415.3,
+            "Ab4" : 415.3,
+            "A4" : 440,
+            "A#4" : 466.16,
+            "Bb4" : 466.16,
+            "B4" : 493.88,
+            "C5" : 523.25,
+            "C#5" : 554.37,
+            "Db5" : 554.37,
+            "D5" : 587.33,
+            "D#5" : 622.25,
+            "Eb5" : 622.25,
+            "E5" : 659.25,
+            "F5" : 698.46,
+            "F#5" : 739.99,
+            "Gb5" : 739.99,
+            "G5" : 783.99,
+            "G#5" : 830.61,
+            "Ab5" : 830.61,
+            "A5" : 880,
+            "A#5" : 932.33,
+            "Bb5" : 932.33,
+            "B5" : 987.77,
+            "C6" : 1046.5,
+            "C#6" : 1108.73,
+            "Db6" : 1108.73,
+            "D6" : 1174.66,
+            "D#6" : 1244.51,
+            "Eb6" : 1244.51,
+            "E6" : 1318.51,
+            "F6" : 1396.91,
+            "F#6" : 1479.98,
+            "Gb6" : 1479.98,
+            "G6" : 1567.98,
+            "G#6" : 1661.22,
+            "Ab6" : 1661.22,
+            "A6" : 1760,
+            "A#6" : 1864.66,
+            "Bb6" : 1864.66,
+            "B6" : 1975.53,
+            "C7" : 2093,
+            "C#7" : 2217.46,
+            "Db7" : 2217.46,
+            "D7" : 2349.32,
+            "D#7" : 2489.02,
+            "Eb7" : 2489.02,
+            "E7" : 2637.02,
+            "F7" : 2793.83,
+            "F#7" : 2959.96,
+            "Gb7" : 2959.96,
+            "G7" : 3135.96,
+            "G#7" : 3322.44,
+            "Ab7" : 3322.44,
+            "A7" : 3520,
+            "A#7" : 3729.31,
+            "Bb7" : 3729.31,
+            "B7" : 3951.07
+        };
+        
         var gFontMap = {
-          "dither": "101010010101101010010101101010010101",
           "0": "011100110010101010100110011100000000",
           "1": "001000011000001000001000011100000000",
           "2": "011100000010001110010000011110000000",
@@ -414,11 +524,59 @@
           };
           document.head.appendChild(script);
         }
+        function engineInitialize() {
+          
+          var joypad = document.getElementById("joypad");
+          var buttonC = document.getElementById("button-c");
+          var buttonX = document.getElementById("button-x");
+          var buttonF = document.getElementById("button-f");
+
+          gContext = document.getElementById("screen").getContext("2d");
+         
+          rect(0,0,160,120,0);
+
+          window.document.body.addEventListener("keydown",handleKeyDownEvent);
+          window.document.body.addEventListener("keyup",handleKeyUpEvent);
+          
+          //JOYPAD
+          joypad.addEventListener("touchstart",handleDPadTouchStartEvent);
+          joypad.addEventListener("touchmove",handleDPadTouchMoveEvent);
+          joypad.addEventListener("touchend",handleDPadTouchEndEvent);
+          //BUTTON-C
+          buttonC.addEventListener("touchstart",handleButtonCTouchStartEvent);
+          buttonC.addEventListener("touchend",handleButtonCTouchEndEvent);
+          //BUTTON-X
+          buttonX.addEventListener("touchstart",handleButtonXTouchStartEvent);
+          buttonX.addEventListener("touchend",handleButtonXTouchEndEvent);
+          //button-f
+          buttonF.addEventListener("touchstart",handleButtonFTouchStartEvent);
+          buttonF.addEventListener("touchend",handleButtonFTouchEndEvent);
+          setInterval(checkWindowResize,30);
+          updateLayout();
+          requestAnimationFrame(engineStartupScreen);
+        }
+        function engineStartupScreen() {
+          rect(0,0,160,120,0); // clear the screen
+          text(8,8,5,"Micro Engine");  
+          for (var c = 1; c < 8; c+=1) {
+              rect(8,14+c,72-c*2,1, c);
+          }
+          text(26,60,7,"PRESS 'F' TO START")
+          if (pressed(6)) {
+            gGameStarted = true;
+            if (typeof window.ready === "function") {
+              window.ready();
+            }
+            requestAnimationFrame(engineUpdate);
+          } else {
+            requestAnimationFrame(engineStartupScreen);
+          }
+
+        }
         function engineUpdate() {
           if (window.update !== undefined) {
             window.update();
             resetButtonFlags();
-            
           }
           requestAnimationFrame(engineUpdate);
         }
@@ -471,7 +629,7 @@
         }
         function handleButtonCTouchEndEvent(e) {
           return resolveButtonTouchEndEvent(4,e);
-        }
+        } 
         function handleButtonXTouchStartEvent(e) {
           return resolveButtonTouchStartEvent(5,e);
         }
@@ -553,38 +711,83 @@
             }
         }
         function initializeAudio() {
-            gAudioContext = (gAudioContext) ? gAudioContext : new AudioContext();
+          for (var ch = 0; ch < 4; ch += 1) {
+            if (gAudioContexts[ch] == null) {
+              gAudioContextsPlaying[ch] = false;    
+              gAudioContexts[ch] = new AudioContext();
+            }
+          }
         }
-        function engineInitialize() {
-          
-          var joypad = document.getElementById("joypad");
-          var buttonC = document.getElementById("button-c");
-          var buttonX = document.getElementById("button-x");
-          var buttonF = document.getElementById("button-f");
+        function playNoiseEffect(channel,speed,loop,notes) {
 
-          gContext = document.getElementById("screen").getContext("2d");
-         
-          rect(0,0,160,120,0);
+          var noteDuration = 1 / speed;
+          var noteVolume = 0.01;
+          var audioContext =gAudioContexts[channel];
+          var bufferSize = audioContext.sampleRate * (noteDuration * notes.length);
+          var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+          var data = buffer.getChannelData(0);
+          var noise = audioContext.createBufferSource();
+          var bandpass = audioContext.createBiquadFilter();
+          var gainNode = audioContext.createGain();
 
-          window.document.body.addEventListener("keydown",handleKeyDownEvent);
-          window.document.body.addEventListener("keyup",handleKeyUpEvent);
+          gAudioContextsPlaying[channel] = true;
+
+          for (var i = 0; i < bufferSize; i+=1) {
+            data[i] = Math.random() * 2 - 1;
+          }
+
+          noise.buffer = buffer;
+          bandpass.type = "bandpass";
+          bandpass.frequency.value = gMusicNotes[notes[0]];
+          gainNode.gain.value = noteVolume;
           
-          //JOYPAD
-          joypad.addEventListener("touchstart",handleDPadTouchStartEvent);
-          joypad.addEventListener("touchmove",handleDPadTouchMoveEvent);
-          joypad.addEventListener("touchend",handleDPadTouchEndEvent);
-          //BUTTON-C
-          buttonC.addEventListener("touchstart",handleButtonCTouchStartEvent);
-          buttonC.addEventListener("touchend",handleButtonCTouchEndEvent);
-          //BUTTON-X
-          buttonX.addEventListener("touchstart",handleButtonXTouchStartEvent);
-          buttonX.addEventListener("touchend",handleButtonXTouchEndEvent);
-          //button-f
-          buttonF.addEventListener("touchstart",handleButtonFTouchStartEvent);
-          buttonF.addEventListener("touchend",handleButtonFTouchEndEvent);
-          setInterval(checkWindowResize,30);
-          updateLayout();
-          requestAnimationFrame(engineUpdate);
+          for(var i = 1; i < notes.length; i += 1) {
+            bandpass.frequency.setValueAtTime(gMusicNotes[notes[i]], audioContext.currentTime + (i*noteDuration));
+          }
+
+          gainNode.connect(audioContext.destination);
+          noise.connect(bandpass).connect(gainNode);
+          noise.start();
+          noise.onended = function () {
+            noise.disconnect();
+            gainNode.disconnect();
+            if (loop === true) {
+              playNoiseEffect(channel,speed,loop,notes);
+            } else {
+              gAudioContextsPlaying[channel] = false;
+            }
+          };
+        }
+        function playSoundEffect(channel,speed,voice,loop,notes) {
+
+          var noteDuration = 1 / speed;
+          var noteVolume = 0.01;
+          var audioContext = gAudioContexts[channel];
+          var oscillator = audioContext.createOscillator();
+          var gainNode = audioContext.createGain();
+          
+          gAudioContextsPlaying[channel] = true;
+          oscillator.frequency.value = gMusicNotes[notes[0]];
+          oscillator.type = gAudioVoices[voice];
+          
+          for (var i = 1; i < notes.length; i += 1) {
+            oscillator.frequency.setValueAtTime(gMusicNotes[notes[i]],audioContext.currentTime + (i*noteDuration) );
+          }
+          
+          gainNode.gain.value = noteVolume;
+          gainNode.connect(audioContext.destination);
+          oscillator.connect(gainNode);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + (notes.length * noteDuration));
+          oscillator.onended = function () {
+            oscillator.disconnect();
+            gainNode.disconnect();
+            if (loop === true) {
+              playSoundEffect(channel,speed,voice,loop,notes);
+            } else {
+              gAudioContextsPlaying[channel] = false;
+            }
+          };
         }
         function renderChar(sx,sy,color,char) {
           var pixels = gFontMap[char.toLowerCase()] || gFontMap["?"];
@@ -605,9 +808,6 @@
         function startup () {
           if (areIncludesResolved()) {
             setTimeout(function() {
-              if (typeof window.ready === "function") {
-                window.ready(); //from game.js
-              }
               engineInitialize();
             },30);
           } else {
@@ -622,9 +822,28 @@
           
           rect(x,y,1,1,color);
         };
-        win.rect = function rect(x,y,w,h,color) {
+        win.rect = function rect(x,y,w,h,color, optColor2) {
+          
           gContext.fillStyle = gColorMap[color];
           gContext.fillRect(x,y,w,h);
+
+          if (optColor2 !== undefined) {
+            gContext.fillStyle = gColorMap[optColor2];
+            for (var px = x; px < x+w; px += 1) {
+              for(var py = y; py < y+h; py += 1) {
+                if (py % 2 == 0) {
+                  if (px % 2 == 0) {
+                    gContext.fillRect(px,py,1,1);
+                  }
+                } else {
+                  if (px % 2 !== 0) {
+                    gContext.fillRect(px,py,1,1);
+                  }
+                }
+              }
+            }
+          }
+
         };
         win.draw = function draw(x,y,array,optMaskColor) {
           var row;
@@ -640,30 +859,23 @@
           for (var i = 0; i < msg.length; i += 1) {
             renderChar(x+(i*6),y,color,msg[i]);
           }
-        }
-        win.play = function play(seconds,hertz,waveIndex) {
-
-          if (!gAudioPlaying) {
-
+        };
+        win.play = function play(channel,speed,voice,loop,notes) {
+          if (!gAudioContextsPlaying[channel]) {
             initializeAudio();
-            gAudioPlaying = true;
-            //0 - sine 1 - saw  2 - square 3 - triangle
-            var oscillator = gAudioContext.createOscillator();
-            var gainNode = gAudioContext.createGain();
-            oscillator.type = gSoundWaveMap[waveIndex];
-            oscillator.frequency.value = hertz;
-            gainNode.connect(gAudioContext.destination);
-            oscillator.connect(gainNode);
-            oscillator.start();
-            oscillator.stop(gAudioContext.currentTime + seconds);
-            oscillator.onended = function () {
-              oscillator.disconnect();
-              gainNode.disconnect();
-              setTimeout(function(){ 
-                gAudioPlaying = false;
-              },10);
-            };
+            if (voice == 4) { //voice = noise
+              playNoiseEffect(channel,speed,loop,notes);
+            } else {
+              playSoundEffect(channel,speed,voice,loop,notes);
+            }
           }
+        };
+        win.stop = function stop(channel) {
+          try {
+            gAudioContexts[channel].close();
+          } catch (er) { }
+          gAudioContexts[channel] = new AudioContext();
+          gAudioContextsPlaying[channel] = false;
         };
         win.held = function held(buttonIndex) {
           return gButtons.down[buttonIndex];
