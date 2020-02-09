@@ -718,10 +718,9 @@
             }
           }
         }
-        function playNoiseEffect(channel,speed,loop,notes) {
+        function playNoiseEffect(channel,speed,volume,loop,notes) {
 
           var noteDuration = 1 / speed;
-          var noteVolume = 0.01;
           var audioContext =gAudioContexts[channel];
           var bufferSize = audioContext.sampleRate * (noteDuration * notes.length);
           var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
@@ -739,7 +738,7 @@
           noise.buffer = buffer;
           bandpass.type = "bandpass";
           bandpass.frequency.value = gMusicNotes[notes[0]];
-          gainNode.gain.value = noteVolume;
+          gainNode.gain.value = volume;
           
           for(var i = 1; i < notes.length; i += 1) {
             bandpass.frequency.setValueAtTime(gMusicNotes[notes[i]], audioContext.currentTime + (i*noteDuration));
@@ -752,16 +751,15 @@
             noise.disconnect();
             gainNode.disconnect();
             if (loop === true) {
-              playNoiseEffect(channel,speed,loop,notes);
+              playNoiseEffect(channel,speed,volume,loop,notes);
             } else {
               gAudioContextsPlaying[channel] = false;
             }
           };
         }
-        function playSoundEffect(channel,speed,voice,loop,notes) {
+        function playSoundEffect(channel,speed,voice,volume,loop,notes) {
 
           var noteDuration = 1 / speed;
-          var noteVolume = 0.01;
           var audioContext = gAudioContexts[channel];
           var oscillator = audioContext.createOscillator();
           var gainNode = audioContext.createGain();
@@ -774,7 +772,7 @@
             oscillator.frequency.setValueAtTime(gMusicNotes[notes[i]],audioContext.currentTime + (i*noteDuration) );
           }
           
-          gainNode.gain.value = noteVolume;
+          gainNode.gain.value = volume;
           gainNode.connect(audioContext.destination);
           oscillator.connect(gainNode);
           oscillator.start();
@@ -783,7 +781,7 @@
             oscillator.disconnect();
             gainNode.disconnect();
             if (loop === true) {
-              playSoundEffect(channel,speed,voice,loop,notes);
+              playSoundEffect(channel,speed,voice,volume,loop,notes);
             } else {
               gAudioContextsPlaying[channel] = false;
             }
@@ -860,13 +858,13 @@
             renderChar(x+(i*6),y,color,msg[i]);
           }
         };
-        win.play = function play(channel,speed,voice,loop,notes) {
+        win.play = function play(channel,speed,voice,volume,loop,notes) {
           if (!gAudioContextsPlaying[channel]) {
             initializeAudio();
             if (voice == 4) { //voice = noise
-              playNoiseEffect(channel,speed,loop,notes);
+              playNoiseEffect(channel,speed,volume,loop,notes);
             } else {
-              playSoundEffect(channel,speed,voice,loop,notes);
+              playSoundEffect(channel,speed,voice,volume,loop,notes);
             }
           }
         };

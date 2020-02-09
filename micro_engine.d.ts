@@ -101,7 +101,7 @@ declare function text(x:number, y:number, color:number, message:string): void;
 
 
 /** Plays a series of notes on the specified audio channel based on the provided parameters. 
- * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#play-channel-speed-voice-loop-notes-)  
+ * [More Info on GitHub](https://github.com/SpencerJobe/MicroEngine#play-channel-speed-voice-volume-loop-notes-)  
  * ```  
  * -Sound Wave Types -
  *     0  Sine       3  Triangle
@@ -111,10 +111,11 @@ declare function text(x:number, y:number, color:number, message:string): void;
  * @param {number} channel sound channel 0 thru 3 to play sound on
  * @param {number} speed seconds the sound will play. Value can be a decimal less than one 
  * @param {number} voice index of sound wave type used when playing notes (0-sine 1-sawtooth 2-square 3-triangle, 4-noise)
+ * @param {number} volume decimal value between 0 and 1 representing volume of notes. 
  * @param {boolean} loop play notes on a loop. (true = loop, false = one-time)
  * @param {Array<string>} notes array of strings representing notes to be played (use "-" for silence)
  */
-declare function play(channel:number,speed:number,voice:number,loop:boolean,notes:Array<string>) : void;
+declare function play(channel:number,speed:number,voice:number,volume:number,loop:boolean,notes:Array<string>) : void;
 
 
 /** Stops a channel from playing its audio if it is playing. 

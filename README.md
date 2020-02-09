@@ -156,7 +156,7 @@ is provided below.
   - [`draw( <x>, <y>, <spriteArray>, [optMaskColor] )`](#draw-x-y-spriteArray-optMaskColor-)  
   - [`text( <x>, <y>, <color>, <message> )`](#text-x-y-color-message-)  
 - Audio
-  - [`play( <channel>, <speed>, <voice>, <loop>, <notes> )`](#play-channel-speed-voice-loop-notes-)
+  - [`play( <channel>, <speed>, <voice>, <volume>, <loop>, <notes> )`](#play-channel-speed-voice-volume-loop-notes-)
   - [`stop( <channel> )`](#stop-channel-)
 - Controls
   - [`held( <buttonIndex> )`](#held-buttonIndex-)  
@@ -526,7 +526,7 @@ function update() {
 
 <!-- ******************************************************************************************** -->
 #
-### `play( <channel>, <speed>, <voice>, <loop>, <notes> )`
+### `play( <channel>, <speed>, <voice>, <volume>, <loop>, <notes> )`
 //[Home](#MicroEngine)/[Commands](#Commands)/play
 
 | Parameter | Type | Description |
@@ -534,6 +534,7 @@ function update() {
 | `<channel>` | number | Channel on which the sound will play. <br> (Valid values are 0 thru 3)
 | `<speed>` | number | Number of notes played per second. 
 | `<voice>`   | number | index of the sound wave type to be used as the voice for the notes. 
+| `<volume>`   | number | number between 0 and 1 representing the volume of the channel
 | `<loop>` | boolean | Set to true if you want the notes to be played on a loop
 | `<notes>` | Array&lt;string&gt; | An array of strings representing notes to play ([See Audio](#Audio))
 &nbsp;
@@ -579,8 +580,8 @@ function update() {
     if (pressed(4)) {
 
         // play a C in the third octave as a triangle wave 
-        // for 1/4 of a second on channel 0.
-        play(0,4,3,false,["C3"]);
+        // for 1/4 of a second on channel 0 at 50% (0.5) volume.
+        play(0,4,3,0.5,false,["C3"]); 
     }
 }
 
@@ -602,7 +603,7 @@ function update() {
 **_Information_**
 
 The `stop` command will stop an audio channel if that channel is currently playing. 
-To play sounds and music see the [`play`](#play-channel-speed-voice-loop-notes-) command.
+To play sounds and music see the [`play`](#play-channel-speed-voice-volume-loop-notes-) command.
 
 
 &nbsp;
@@ -1411,7 +1412,7 @@ MicroEngine supports four-channel audio. This means you can play four separate  
 at the same time. MicroEngine provides retro-style voices and a range of notes. Octaves 2 through 7
 are fully supported. A few notes from the first octave are also supported. You can set the playback 
 speed of notes and whether the notes are played on a loop like a musical track. There are only
-two audio commands: [`play`](#play-channel-speed-voice-loop-notes-) and [`stop`](#stop-channel-). However, 
+two audio commands: [`play`](#play-channel-speed-voice-volume-loop-notes-) and [`stop`](#stop-channel-). However, 
 with these two commands, you can create a wide range of sound effects and music.
 
 &nbsp;
@@ -1422,10 +1423,11 @@ MicroEngine supports four audio channels. They are referenced by index 0 through
     var channel = 0;
     var speed = 2; // 2 notes per second
     var voice = 3; // 3 triangle wave
+    var volume = 0.5; // value between 0 and 1
     var loop = false;  //don't loop this channel
     var notes =["C2","D2","E2","F2","G2","A2","B2"];
 
-    play(channel,speed,voice,loop,notes);
+    play(channel,speed,voice,volume,loop,notes);
 ```
 
 ### Voices

@@ -144,24 +144,24 @@ Ball.prototype.move = function (blockList,paddle) {
         gScore += 10 * this.combo;
         this.reflect(block);
         this.combo += 1;
-        play(0,8,4,false,["C6","C5","C4","C3"]);
+        play(0,8,4,0.4,false,["C6","C5","C4","C3"]);
         
 
     } else if (overlap(this.x,this.y,this.size,this.size, 
         paddle.x, paddle.y, paddle.width,paddle.height)) {
         this.combo = 1;
         this.reflect(paddle)
-        play(0,6,3,false,["E3"]);
+        play(0,6,3,0.4,false,["E3"]);
     }
 
     if (this.x >= PLAYFIELD_RIGHT-this.size || this.x <= PLAYFIELD_LEFT) {
         this.xVelo *= -1;
-        play(1,6,3,false,["C3"]);
+        play(1,6,3,0.4,false,["C3"]);
     }
 
     if (this.y <= PLAYFIELD_TOP) {
         this.yVelo *= -1;
-        play(2,6,3,false,["C3"]);
+        play(2,6,3,0.4,false,["C3"]);
     }
 
 

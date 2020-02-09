@@ -1,3 +1,4 @@
+/// <reference path="micro_engine.d.ts" />
 
 var gAudioVoices = {
     0: "sine",
@@ -21,6 +22,7 @@ var gNotes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 var gSpeed = 4;
 var gVoice = 0;
 var gLoop = true;
+var gVolume = 20;
 
 function renderNotes() {
 
@@ -33,10 +35,11 @@ function renderNotes() {
 
 function renderOptions() {
 
-    text(40,12,0,"Speed:" + gSpeed);
-    text(40,24,0,"Voice:" + gAudioVoices[gVoice]);
-    text(40,36,0," Loop:" + gLoop);
-}
+    text(40,12,0," Speed:" + gSpeed);
+    text(40,24,0," Voice:" + gAudioVoices[gVoice]);
+    text(40,36,0,"  Loop:" + gLoop);
+    text(40,48,0,"Volume:" + gVolume + "/100");
+}   
 
 var gCursor = 1;
 var gColumn = 0;
@@ -78,19 +81,21 @@ function updateCursor() {
                 case 0 : gSpeed += (gSpeed < 32); break;
                 case 1 : gVoice += (gVoice < 4); break;
                 case 2 : gLoop = !gLoop; break;
+                case 3 : gVolume += (gVolume < 100); break;
             }
         } else if (pressed(3)) {
             switch(gCursor) {
                 case 0 : gSpeed -= (gSpeed > 0); break;
                 case 1 : gVoice -= (gVoice > 0); break;
                 case 2 : gLoop = !gLoop; break;
+                case 3 : gVolume -= (gVolume > 0); break;
             }
         }
 
 
         if (gCursor < 0) {
-            gCursor = 2;
-        } else if (gCursor > 2) {
+            gCursor = 3;
+        } else if (gCursor > 3) {
             gCursor = 0;
         }
     }
@@ -108,7 +113,7 @@ function updateSoundPlayer() {
 
     if (pressed(5)) {
         stop(0);
-        play(0,gSpeed,gVoice,gLoop,getSoundTrack());
+        play(0,gSpeed,gVoice,(gVolume/100),gLoop,getSoundTrack());
     }
 
     if (pressed(6)) {
