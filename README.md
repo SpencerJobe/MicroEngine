@@ -531,7 +531,7 @@ function update() {
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `<channel>` | number | Channel on which the sound will play. <br> (Valid values are 0 thru 3)
+| `<channel>` | number | Channel on which the sound will play. (Valid values are 0 thru 3)
 | `<speed>` | number | Number of notes played per second. 
 | `<voice>`   | number | index of the sound wave type to be used as the voice for the notes. 
 | `<volume>`   | number | number between 0 and 1 representing the volume of the channel
