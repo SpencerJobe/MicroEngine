@@ -1388,7 +1388,7 @@ in the upper left corner of the screen.
 All text is rendered in a 6x6 pixel mono-spaced font. The screen 
 can display 20 rows of text. Each row can hold up to 26 characters.
 Each symbol is actually a 5x5 pixel square with a 1-pixel border on 
-the left and bottom. Below are the supported characters. 
+the right and bottom edges. Below are the supported characters. 
 If a you try to display a character that's not in this list,
 MicroEngine will display a question mark instead.
 
