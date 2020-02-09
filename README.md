@@ -536,7 +536,8 @@ function update() {
 | `<voice>`   | number | index of the sound wave type to be used as the voice for the notes. 
 | `<volume>`   | number | number between 0 and 1 representing the volume of the channel
 | `<loop>` | boolean | Set to true if you want the notes to be played on a loop
-| `<notes>` | Array&lt;string&gt; | An array of strings representing notes to play ([See Audio](#Audio))
+| `<notes>` | Array&lt;string&gt; | An array of strings representing notes to play ([See Audio](#Audio)) 
+
 &nbsp;
 
 **_Information_**
