@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Engine - Sprite Editor</title>
+    <style>
+        body * {
+            box-sizing: border-box;
+            margin:0px;
+            padding:0px;
+            outline-width: 0px;
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Old versions of Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                    user-select: none; /* Non-prefixed version, currently
+                                        supported by Chrome, Edge, Opera and Firefox */
+        }
+        body {
+            box-sizing: border-box;
+            margin:0px;
+            padding:0px;
+            font-family: "Consolas", monospace;
+        }
+        
+        ::-webkit-scrollbar { 
+            width: 20px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgb(40,40,40);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgb(80,80,80);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgb(100,100,100);
+        }
+        ::-webkit-scrollbar-corner {
+            background:rgb(40,40,40);
+        }
+
+        .command-bar {
+            position:absolute;
+            top:0px;
+            left:0px;
+            right:0px;
+            height:40px;
+            background:rgb(16,16,16);
+            border-bottom:1px solid rgb(0,0,0);
+            overflow: hidden;
+        }
+        .command-bar button {
+            position:relative;
+            margin-left:10px;
+            width:100px;
+            font-size:13px;
+            font-family: sans-serif;
+            margin-top:5px;
+            height:30px;
+            background:rgb(64,64,64);
+            border: 1px solid rgb(0,0,0);
+            color:rgb(255,255,255);
+            border-radius: 0px;
+        }
+        .command-bar button:hover {
+            background:rgb(255,255,255);
+            border-color:rgb(0,0,255);
+            color:rgb(0,0,255);
+            cursor:pointer;
+        }
+
+        .zoom-dropdown {
+            margin-left:10px;
+            position:relative;
+            display:inline-block;
+            color:rgb(255,255,255);
+        }
+        .zoom-dropdown select {
+            background:rgb(64,64,64);
+            color:rgb(255,255,255);
+            width:60px;
+            border:1px solid rgb(0,0,0);
+        }
+        .zoom-dropdown option {
+            background:rgb(64,64,64);
+            color:rgb(255,255,255);
+        }
+        .pallette-panel {
+            position:absolute;
+            top:40px;
+            left:0px;
+            width:90px;
+            bottom:0px;
+            background:rgb(32,32,32);
+            border-right:1px solid rgb(0,0,0);
+            overflow:hidden;
+        }
+        .swatch {
+            position:relative;
+            display:block;
+            margin:10px;
+            width:70px;
+            height:70px;
+            border: 8px ridge rgb(64,64,64);
+            line-height:56px;
+            font-size:40px;
+            text-align: center;
+            color:black;
+        }
+        .swatch:hover {
+            cursor:pointer;
+            border-color:rgb(100,100,100);
+        }
+
+        .color0 {
+            background:rgb(0,0,0);
+            color:white;
+        }
+        .color1 {
+            background:rgb(200,0,75)
+        }
+        .color2 {
+            background:rgb(255,200,0);
+        }
+        .color3 { 
+            background:rgb(160,80,20);
+        }
+        .color4 {
+            background:rgb(100,200,0);
+        }
+        .color5 {
+            background:rgb(0,150,255);
+        }
+        .color6 {
+            background:rgb(80,40,55);
+            color:white;
+        }
+        .color7 {
+            background:rgb(250,250,250);
+        }
+        .pixel-panel {
+            position:absolute;
+            top:40px;
+            left:90px;
+            right:0px;
+            bottom:0px;
+            background:rgb(80,80,80);
+            font-size: 0px;
+            overflow:scroll;
+        }
+        .pixel {
+            position:absolute;
+            display:inline-block;
+            width: 16px;
+            height:16px;
+            font-size:0px;
+        }
+        .pixel:hover {
+           box-shadow: 0px 0px 0px 1px rgb(255,255,255);
+           z-index: 3;
+        }
+        .code-frame {
+            position:absolute;
+            top:0px;
+            left:0px;
+            right:0px;
+            bottom:0px;
+            z-index: 999;
+        }
+        .code-shade {
+            position:absolute;
+            top:0px;
+            left:0px;
+            right:0px;
+            bottom:0px;
+            background:rgba(0,0,0,0.5);
+        }
+        .code-window {
+            position:absolute;
+            top:100px;
+            left:100px;
+            right:100px;
+            bottom:100px;
+            border:1px solid rgb(0,0,0);
+            background:rgb(64,64,64);
+            overflow:hidden;
+        }
+        .code-wrapper {
+            position:absolute;
+            top:10px;
+            left:10px;
+            right:10px;
+            bottom:60px;
+            border:1px solid rgb(0,0,0);
+            overflow:hidden;
+        }
+        .sprite-code {
+            position:absolute;
+            top:0px;
+            left:0px;
+            width:100%;
+            height:100%;
+            border:none;
+            overflow:scroll;
+            resize:none;
+            background:rgb(32,32,32);
+            color:rgb(220,220,220);
+        }
+        .close-code-button {
+            position:absolute;
+            bottom:10px;
+            right:10px;
+            height:40px;
+            width:100px;
+            background:rgb(0,0,0);
+            border:1px solid rgb(0,0,0);
+            color:rgb(255,255,255);
+        }
+        .close-code-button:hover {
+            background:rgb(255,255,255);
+            border-color:rgb(0,0,255);
+            color:rgb(0,0,255);
+            cursor:pointer;
+        }
+
+        .file-opener {
+            position:absolute;
+            top:-1px;
+            left:-1px;
+            width:1px;
+            height:1px;
+            overflow:hidden;
+        }
+    </style>
+    <script>
+        var gZoom = 7;
+        var gMouseDown = false;
+        var gSprite = [];
+        var gColorIndex = 7;
+
+        function handleBodyKeydown(e) {
+            var ev = e || window.event;
+            var key = ev.keyCode;
+
+            if (key == 192 || key == 48) {
+                
+                setColor(0);
+
+            } else if (key >= 49 && key <= 55) {
+                
+                setColor(key - 48);
+            
+            } else if (key >= 96 && key <= 103 ) {
+            
+                setColor(key-96);
+            }
+        }
+
+        function createEmptySprite(width,height) {
+            var sprite = [];
+            for ( var y = 0; y < height; y += 1) {
+                sprite[y] = [];
+                for ( var x = 0; x < width; x += 1) {
+                    sprite[y][x] = 0;
+                }
+            }
+            return sprite;
+        }
+
+        function addBlankSprite() {
+            gSprite = createEmptySprite(32,32);
+            renderSprite(gSprite);
+        }
+
+        function renderSprite(sprite) {
+            var html = "";
+            var width = sprite[0].length;
+            var height = sprite.length;
+            var colorIndex = 0;
+            var top = 0;
+            var left = 0;
+
+            for ( var y = 0; y < height; y += 1) {
+                top = gZoom * y;
+                for ( var x = 0; x < width; x += 1) {
+                    colorIndex = sprite[y][x];
+                    left = gZoom * x;
+                    html += `<div 
+                        class="pixel color${colorIndex}" 
+                        data-x="${x}" 
+                        data-y="${y}" 
+                        data-color="${colorIndex}"
+                        style="top:${top}px; left:${left}px; height:${gZoom}px; width:${gZoom}px;"
+                    ></div>`;
+                }
+            }
+            document.getElementById("spritePixels").innerHTML = html;
+
+        }
+
+        function setColor(colorIndex) {
+
+            var list = document.getElementsByClassName("swatch");
+            var el;
+
+            for ( var i = 0; i < list.length; i += 1) {
+                
+                el = list[i];
+                el.style["border-color"] = 
+                    el.className.indexOf("color"+colorIndex) > 0 ? "rgb(180,180,180)": ""
+            }
+
+            gColorIndex = colorIndex;
+        }
+
+        function getTimeStamp ( ) {
+            var items = String(new Date()).split(" ");
+            var months = {"Jan":"01","Feb":"02","Mar":"03",
+                          "Apr":"04","May":"05","Jun":"06",
+                          "Jul":"07","Aug":"08","Sep":"09",
+                          "Oct":"10","Nov":"11","Dec":"12"};
+            var year = items[3];
+            var month = months[items[1]];
+            var day = items[2];
+            var time = items[4].replace(/\:/g,".");
+            
+            return `Y${year}M${month}D${day}T${time}`;
+        }
+
+        function openSprite() {
+            document.getElementById("fileOpener").click();
+        }
+
+        function loadSpriteFile(e) {
+
+            var ev = e || window.event;
+            var reader = new FileReader();
+            
+            reader.onload = function ( ) {
+            
+                var sourceCode = reader.result;
+            
+                sourceCode = sourceCode.replace("sprite","gSprite");
+                eval(sourceCode);
+                renderSprite(gSprite);
+            };
+            
+            reader.readAsText(ev.target.files[0]);
+        }
+
+        function saveSprite() {
+
+            var name = "me_sprite_" + getTimeStamp() + ".jsarray.txt";
+            var a = document.createElement("a");
+            var sourceCode = getSpriteSourceCode();
+            var file = new Blob([sourceCode], {type: "text/plain"});
+  
+            a.href= URL.createObjectURL(file);
+            a.download = name;
+            a.click();
+	        URL.revokeObjectURL(a.href);
+        }
+
+        function showCodeFrame() {
+            var src = getSpriteSourceCode();
+            document.getElementById("spriteCode").value = src;
+            document.getElementById("codeFrame").style.display = "";
+        }
+
+        function hideCodeFrame() {
+            document.getElementById("codeFrame").style.display = "none";
+        }
+
+        function getSpriteSourceCode() {
+
+            var src = "sprite = [";
+            var srcRow = "";
+            var height = gSprite.length;
+            var width = gSprite[0].length;
+
+            for ( var y = 0; y < height; y += 1) {
+
+                srcRow = "";
+                for ( var x = 0; x < width; x += 1) {
+                    srcRow += "," + gSprite[y][x];
+                }
+                src += "\n    [" + srcRow.substring(1) + "],";
+            }
+            src = src.substring(0,src.length-1);
+            src += "\n];";
+
+            return src;
+        }
+
+        function updateZoom ( ) {
+
+            var sel = document.getElementById("zoomSelect");
+
+            if ( sel.selectedIndex >= 0 )  {
+           
+                gZoom = sel.options[sel.selectedIndex].value;
+                renderSprite(gSprite);
+            }
+        }
+
+        function resizeSprite() {
+
+            var y = gSprite.length;
+            var x = gSprite[0].length;
+            var size = x + "," + y;
+            var newSize = prompt(`Set size "X,Y" (Current: "${x},${y}")`,size);
+            var items = newSize.split(",");
+            var newX = parseInt(items[0]);
+            var newY = parseInt(items[1]);
+            var newSprite = [];
+
+            if (newX > 0 && newX <= 160 && newY > 0 && newY <= 120) {
+
+                for (var ny = 0; ny < newY; ny += 1) {
+                
+                    newSprite[ny] = [];
+                
+                    for ( var nx = 0; nx < newX; nx += 1) {
+                
+                        if (gSprite[ny] == undefined) {
+                            
+                            newSprite[ny][nx] = 0;
+                        
+                        } else if (gSprite[ny][nx] == undefined) {
+                
+                            newSprite[ny][nx] = 0;
+                
+                        } else {
+                
+                            newSprite[ny][nx] = gSprite[ny][nx];
+                        }
+                    }
+                }
+                gSprite = newSprite;
+                renderSprite(gSprite);
+            }
+        }
+
+        function swapColors () {
+
+            var items = prompt("Swap Colors \"<from>,<to>\"\n Enter in the color indexes you want to swap").split(",");
+            var fromColor = parseInt(items[0]);
+            var toColor = parseInt(items[1]);
+            
+            if ( fromColor >= 0 && fromColor <= 7 && toColor >= 0 && fromColor <= 7) {
+            
+                swapSpriteColors(fromColor,toColor);
+            }
+        }
+
+        function swapSpriteColors(fromColor,toColor) {
+            
+            var height = gSprite.length;
+            var width = gSprite[0].length;
+
+            for ( var y = 0; y < height; y += 1) {
+
+                for ( var x = 0; x < width; x += 1) {
+
+                    if ( gSprite[y][x] == fromColor ) {
+                    
+                        gSprite[y][x] = toColor;
+                    }
+                }
+            }
+            renderSprite(gSprite);
+        }
+
+        function handlePixelMouseDown() {
+
+            gMouseDown = true;
+        }
+
+        function handlePixelMouseUp() {
+
+            gMouseDown = false;
+        }
+
+        function handlePixelClick(e) {
+        
+            resolveRecolorEvent(e);
+        }
+
+        function handlePixelMouseOver(e) {
+        
+            if (gMouseDown) {
+        
+                resolveRecolorEvent(e);
+            }
+        }
+
+        function resolveRecolorEvent(e) {
+
+            var ev = e || window.event;
+            var pixel = ev.target;
+            var x = pixel.getAttribute("data-x");
+            var y = pixel.getAttribute("data-y");
+
+            if (x != undefined) {
+
+                pixel.className = "pixel color" + gColorIndex;
+                gSprite[y][x] = gColorIndex;
+            }
+        }
+
+
+        setTimeout(addBlankSprite,100);
+    </script>
+</head>
+<body
+    onkeydown="handleBodyKeydown()"
+>
+    <input type="file" 
+        id="fileOpener"
+        class="file-opener" 
+        onchange="loadSpriteFile()"
+    />
+
+    <div class="command-bar">
+        <button onclick="openSprite()">Open</button>
+        <button onclick="saveSprite()">Save</button>
+        <button onclick="showCodeFrame()">Get Code</button>
+        <button onclick="resizeSprite()">Resize</button>
+        <button onclick="swapColors()">Swap Colors</button>
+        <div class="zoom-dropdown">
+            Zoom:
+            <select id="zoomSelect" class="zoom-select" onchange="updateZoom()">
+                <option value=1>10%</option>
+                <option value=2>30%</option>
+                <option value=4>60%</option>
+                <option value=7 selected>100%</option>
+                <option value=9>125%</option>
+                <option value=12>175%</option>
+                <option value=14>200%</option>
+                <option value=16>225%</option>
+                <option value=20>300%</option>
+                <option value=24>350%</option>
+                <option value=32>450%</option>
+            </select>
+        </div>
+    </div>
+    <div class="pallette-panel">
+        <div class="swatch color0" onclick="setColor(0)">0</div>
+        <div class="swatch color1" onclick="setColor(1)">1</div>
+        <div class="swatch color2" onclick="setColor(2)">2</div>
+        <div class="swatch color3" onclick="setColor(3)">3</div>
+        <div class="swatch color4" onclick="setColor(4)">4</div>
+        <div class="swatch color5" onclick="setColor(5)">5</div>
+        <div class="swatch color6" onclick="setColor(6)">6</div>
+        <div class="swatch color7" onclick="setColor(7)" style="border-color:rgb(180,180,180);">7</div>
+    </div>
+    <div id="spritePixels" 
+        class="pixel-panel" 
+        onclick="handlePixelClick()"
+        onmouseup="handlePixelMouseUp()"
+        onmousedown="handlePixelMouseDown()" 
+        onmouseover="handlePixelMouseOver()"
+    ></div>
+    <div id="codeFrame" class="code-frame" style="display:none;">
+        <div class="code-shade"></div>
+        <div class="code-window">
+            <div class="code-wrapper">
+                <textarea id="spriteCode"
+                    class="sprite-code"
+                    spellcheck="false"
+                    autocomplete="false"
+                    autocapitalize="false"
+                ></textarea>
+            </div>
+            <button class="close-code-button" onclick="hideCodeFrame()">Close</button>
+        </div>
+
+    </div>
+</body>
+</html>
