@@ -9,6 +9,7 @@ games on the web that work on desktop and mobile devices.
 - [Commands](#Commands)  
 - [Appendix](#Appendix)
 - [Demos](https://spencerjobe.github.io/MicroEngine/)
+- [Sprite Editor](https://spencerjobe.github.io/MicroEngine/sprite-editor/)
 
 &nbsp; &nbsp; &nbsp; ![](readme_resources/micro_engine_horizontal_mini.png)
 
